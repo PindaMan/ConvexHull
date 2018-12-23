@@ -2,6 +2,7 @@
 
 Polygon::Polygon( std::vector<int> xP, std::vector<int> yP )
 {
+	nPoints = 0;
 	xPoints = xP;
 	yPoints = yP;
 	fillPoints();
@@ -13,11 +14,12 @@ Polygon::Polygon( std::vector<Point> points )
 	{
 		allPoints.push_back( points.at( i ) );
 	}
+	nPoints = allPoints.size();
 }
 
 Polygon::Polygon()
 {
-
+	nPoints = 0;
 }
 
 Polygon::~Polygon()
@@ -37,7 +39,10 @@ void Polygon::drawPolygon( SDL_Renderer * renderer )
 		SDL_RenderDrawLine( renderer, allPoints.at( i - 1 ).getX(), allPoints.at( i - 1 ).getY(), allPoints.at( i ).getX(), allPoints.at( i ).getY() );
 	}
 	//Final line
-	SDL_RenderDrawLine( renderer, allPoints.at( nPoints - 1 ).getX(), allPoints.at( nPoints - 1 ).getY(), allPoints.at( 0 ).getX(), allPoints.at( 0 ).getY() );
+	if ( nPoints > 1 )
+	{
+		SDL_RenderDrawLine( renderer, allPoints.at( nPoints - 1 ).getX(), allPoints.at( nPoints - 1 ).getY(), allPoints.at( 0 ).getX(), allPoints.at( 0 ).getY() );
+	}
 }
 
 //Translate the polygon by (dx, dy)
@@ -64,4 +69,11 @@ void Polygon::fillPoints()
 void Polygon::addPoint( Point p )
 {
 	allPoints.push_back( p );
+	nPoints++;
+}
+
+void Polygon::toString()
+{
+	for ( size_t i = 0; i < allPoints.size(); i++ )
+		allPoints.at( i ).print();
 }

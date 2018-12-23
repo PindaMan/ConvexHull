@@ -15,6 +15,7 @@ public:
 
 	void drawPolygon( SDL_Renderer* renderer );
 	void addPoint( Point p );
+	void toString();
 
 private:
 	void fillPoints();

@@ -6,6 +6,8 @@
 #include <vector>
 #include <algorithm>
 
+#define LINEDEBUG
+
 //Initialise SDL
 bool init();
 
@@ -14,6 +16,8 @@ void exit();
 
 
 bool wayToSort( Point &a, Point &b );
+
+double gradient( Point p1, Point p2 );
 
 Polygon merge( Polygon leftPolygon, Polygon rightPolygon );
 
@@ -106,36 +110,320 @@ bool wayToSort( Point& a, Point& b )
 	}
 }
 
+double gradient( Point p1, Point p2 )
+{
+	std::cout << (double) ( p2.getY() - p1.getY() ) / ( p2.getX() - p1.getX() ) << std::endl;
+	return (double) ( p2.getY() - p1.getY() ) / ( p2.getX() - p1.getX() );
+}
+
 Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 {
-	bool pointsToCheck = true;
-	int aCount = 0;
-	int bCount = 0;
+	std::vector<Point> leftPoints = leftPolygon.getPoints();
+	std::vector<Point> rightPoints = rightPolygon.getPoints();
 
-	Polygon mergedPolygon = leftPolygon;
-	std::vector<Point> leftPolygonPoints = leftPolygon.getPoints();
-	std::vector<Point> rightPolygonPoints = rightPolygon.getPoints();
+#ifdef LINEDEBUG
+	std::cout << "Left polygon:" << std::endl;
+	leftPolygon.toString();
+	std::cout << "Right polygon:" << std::endl;
+	rightPolygon.toString();
+	SDL_SetRenderDrawColor( gRenderer, 0x66, 0x66, 0x66, SDL_ALPHA_OPAQUE );
+	SDL_RenderClear( gRenderer );
 
-	//Leftmost point of left polygon
-	Point a = leftPolygonPoints.at(aCount );
-	//Leftmost point of right polygon
-	Point b = rightPolygonPoints.at( bCount );
-
-	while ( pointsToCheck )
+	SDL_Event e;
+	bool quit = false;
+	while ( !quit )
 	{
-		if ( b == rightPolygonPoints.at( rightPolygonPoints.size() - 1 ) )
+		while ( SDL_PollEvent( &e ) != 0 )
 		{
-			pointsToCheck = false;
+			if ( e.type == SDL_KEYDOWN )
+			{
+				if ( e.key.keysym.sym == SDLK_SPACE )
+				{
+					quit = true;
+				}
+			}
 		}
-		else
+		SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
+		leftPolygon.drawPolygon( gRenderer );
+		rightPolygon.drawPolygon( gRenderer );
+		SDL_RenderPresent( gRenderer );
+	}
+#endif
+
+	int aHigher = 0;
+	int aLower = leftPoints.size() - 1;
+
+	int bHigher = rightPoints.size() - 1;
+	int bLower = 0;
+
+	int prevAHigher = aHigher;
+	int prevBHigher = bHigher;
+
+	int prevALower = aLower;
+	int prevBLower = bLower;
+
+	bool found = false;
+
+	bool movingA = true;
+	bool movingB = false;
+
+	//Higher tangent
+	while ( !found )
+	{
+
+		while ( movingA )
 		{
-			b = rightPolygonPoints.at( ++bCount );
+			std::cout << "Moving A Higher" << std::endl;
+			if ( aHigher < leftPoints.size() - 1 )
+			{
+				if ( gradient( leftPoints.at( aHigher ), rightPoints.at( bHigher ) ) <= gradient( leftPoints.at( aHigher + 1 ), rightPoints.at( bHigher ) ) ) //>=
+				{
+					aHigher++;
+				}
+				else
+				{
+					movingA = !movingA;
+					movingB = !movingB;
+				}
+			}
+			else
+			{
+				movingA = !movingA;
+				movingB = !movingB;
+			}
+
+#ifdef LINEDEBUG
+			SDL_SetRenderDrawColor( gRenderer, 0x66, 0x66, 0x66, SDL_ALPHA_OPAQUE );
+			SDL_RenderClear( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
+			leftPolygon.drawPolygon( gRenderer );
+			rightPolygon.drawPolygon( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE );
+			SDL_RenderDrawLine( gRenderer, leftPoints.at( aHigher ).getX(), leftPoints.at( aHigher ).getY(), rightPoints.at( bHigher ).getX(), rightPoints.at( bHigher ).getY() );
+			SDL_RenderPresent( gRenderer );
+			SDL_Event e;
+			bool quit = false;
+			while ( !quit )
+			{
+				while ( SDL_PollEvent( &e ) != 0 )
+				{
+					if ( e.type == SDL_KEYDOWN )
+					{
+						if ( e.key.keysym.sym == SDLK_SPACE )
+						{
+							quit = true;
+						}
+					}
+				}
+			}
+#endif
+
 		}
+
+		while ( movingB )
+		{
+			std::cout << "Moving B Higher" << std::endl;
+			if ( bHigher > 0 )
+			{
+				if ( gradient( leftPoints.at( aLower ), rightPoints.at( bHigher ) ) > gradient( leftPoints.at( aLower ), rightPoints.at( bHigher - 1 ) ) ) //>
+				{
+					bHigher--;
+				}
+				else
+				{
+					movingA = !movingA;
+					movingB = !movingB;
+				}
+			}
+			else
+			{
+				movingA = !movingA;
+				movingB = !movingB;
+			}
+
+#ifdef LINEDEBUG
+			SDL_SetRenderDrawColor( gRenderer, 0x66, 0x66, 0x66, SDL_ALPHA_OPAQUE );
+			SDL_RenderClear( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
+			leftPolygon.drawPolygon( gRenderer );
+			rightPolygon.drawPolygon( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE );
+			SDL_RenderDrawLine( gRenderer, leftPoints.at( aHigher ).getX(), leftPoints.at( aHigher ).getY(), rightPoints.at( bHigher ).getX(), rightPoints.at( bHigher ).getY() );
+			SDL_RenderPresent( gRenderer );
+			SDL_Event e;
+			bool quit = false;
+			while ( !quit )
+			{
+				while ( SDL_PollEvent( &e ) != 0 )
+				{
+					if ( e.type == SDL_KEYDOWN )
+					{
+						if ( e.key.keysym.sym == SDLK_SPACE )
+						{
+							quit = true;
+						}
+					}
+				}
+			}
+#endif
+
+		}
+
+		if ( ( prevAHigher == aHigher ) && ( prevBHigher == bHigher ) )
+		{
+			found = true;
+		}
+
+		prevAHigher = aHigher;
+		prevBHigher = bHigher;
+
 	}
 
-	std::vector<Point> higherTangent[2];
-	std::vector<Point> lowerTangent[2];
+	found = false;
 
+	movingA = false;
+	movingB = true;
+
+	//Lower tangent
+	while ( !found )
+	{
+
+		while ( movingA )
+		{
+			std::cout << "Moving A Lower" << std::endl;
+			if ( aLower > 0 )
+			{
+				if ( gradient( leftPoints.at( aLower ), rightPoints.at( bLower ) ) >= gradient( leftPoints.at( aLower - 1 ), rightPoints.at( bLower ) ) ) //<=
+				{
+					aLower--;
+				}
+				else
+				{
+					movingA = !movingA;
+					movingB = !movingB;
+				}
+			}
+			else
+			{
+				movingA = !movingA;
+				movingB = !movingB;
+			}
+
+#ifdef LINEDEBUG
+			SDL_SetRenderDrawColor( gRenderer, 0x66, 0x66, 0x66, SDL_ALPHA_OPAQUE );
+			SDL_RenderClear( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
+			leftPolygon.drawPolygon( gRenderer );
+			rightPolygon.drawPolygon( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE );
+			SDL_RenderDrawLine( gRenderer, leftPoints.at( aHigher ).getX(), leftPoints.at( aHigher ).getY(), rightPoints.at( bHigher ).getX(), rightPoints.at( bHigher ).getY() );
+			SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0xFF, SDL_ALPHA_OPAQUE );
+			SDL_RenderDrawLine( gRenderer, leftPoints.at( aLower ).getX(), leftPoints.at( aLower ).getY(), rightPoints.at( bLower ).getX(), rightPoints.at( bLower ).getY() );
+			SDL_RenderPresent( gRenderer );
+			SDL_Event e;
+			bool quit = false;
+			while ( !quit )
+			{
+				while ( SDL_PollEvent( &e ) != 0 )
+				{
+					if ( e.type == SDL_KEYDOWN )
+					{
+						if ( e.key.keysym.sym == SDLK_SPACE )
+						{
+							quit = true;
+						}
+					}
+				}
+			}
+#endif
+
+		}
+
+		while ( movingB )
+		{
+			std::cout << "Moving B Lower" << std::endl;
+			if ( bLower < rightPoints.size() - 1 )
+			{
+				if ( gradient( leftPoints.at( aHigher ), rightPoints.at( bLower ) ) < gradient( leftPoints.at( aHigher ), rightPoints.at( bLower + 1 ) ) ) //<
+				{
+					bLower++;
+				}
+				else
+				{
+					movingA = !movingA;
+					movingB = !movingB;
+				}
+			}
+			else
+			{
+				movingA = !movingA;
+				movingB = !movingB;
+			}
+		
+
+#ifdef LINEDEBUG
+			SDL_SetRenderDrawColor( gRenderer, 0x66, 0x66, 0x66, SDL_ALPHA_OPAQUE );
+			SDL_RenderClear( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
+			leftPolygon.drawPolygon( gRenderer );
+			rightPolygon.drawPolygon( gRenderer );
+			SDL_SetRenderDrawColor( gRenderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE );
+			SDL_RenderDrawLine( gRenderer, leftPoints.at( aHigher ).getX(), leftPoints.at( aHigher ).getY(), rightPoints.at( bHigher ).getX(), rightPoints.at( bHigher ).getY() );
+			SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0xFF, SDL_ALPHA_OPAQUE );
+			SDL_RenderDrawLine( gRenderer, leftPoints.at( aLower ).getX(), leftPoints.at( aLower ).getY(), rightPoints.at( bLower ).getX(), rightPoints.at( bLower ).getY() );
+			SDL_RenderPresent( gRenderer );
+			SDL_Event e;
+			bool quit = false;
+			while ( !quit )
+			{
+				while ( SDL_PollEvent( &e ) != 0 )
+				{
+					if ( e.type == SDL_KEYDOWN )
+					{
+						if ( e.key.keysym.sym == SDLK_SPACE )
+						{
+							quit = true;
+						}
+					}
+				}
+			}
+#endif
+
+		}
+
+		if ( ( prevALower == aLower ) && ( prevBLower == bLower ) )
+		{
+			found = true;
+		}
+
+		prevALower = aLower;
+		prevBLower = bLower;
+
+	}
+
+	Point aHigherPoint = leftPoints.at( aHigher );
+	Point aLowerPoint = leftPoints.at( aLower );
+
+	Point bHigherPoint = rightPoints.at( bHigher );
+	Point bLowerPoint = rightPoints.at( bLower );
+
+	Polygon mergedPolygon;
+
+	for ( int i = 0; i <= aHigher; i++ )
+	{
+		mergedPolygon.addPoint( leftPoints.at( i ) );
+	}
+	for ( int i = bHigher; i <= bLower; i++ )
+	{
+		mergedPolygon.addPoint( rightPoints.at( i ) );
+	}
+	for ( int i = aLower; i < leftPoints.size(); i++ )
+	{
+		mergedPolygon.addPoint( leftPoints.at( i ) );
+	}
+
+	std::cout << "Merged" << std::endl;
+	mergedPolygon.toString();
 	return mergedPolygon;
 }
 
@@ -288,7 +576,7 @@ int main( int argc, char* args[] )
 		{
 			SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
 			//convexHull( polygons.at( i ) ).drawPolygon( gRenderer );
-			dcHull( polygons.at( i ) ).drawPolygon( gRenderer );
+			//dcHull( polygons.at( i ) ).drawPolygon( gRenderer );
 		}
 
 		//Add start and end points to the polygons
