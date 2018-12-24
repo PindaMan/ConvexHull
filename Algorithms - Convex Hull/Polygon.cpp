@@ -2,6 +2,8 @@
 
 Polygon::Polygon( std::vector<int> xP, std::vector<int> yP )
 {
+	rightmostIndex = 0;
+	leftmostIndex = 0;
 	nPoints = 0;
 	xPoints = xP;
 	yPoints = yP;
@@ -10,15 +12,27 @@ Polygon::Polygon( std::vector<int> xP, std::vector<int> yP )
 
 Polygon::Polygon( std::vector<Point> points )
 {
+	rightmostIndex = 0;
+	leftmostIndex = 0;
 	for ( size_t i = 0; i < points.size(); i++ )
 	{
 		allPoints.push_back( points.at( i ) );
+		if ( points.at( i ).getX() > allPoints.at( rightmostIndex ).getX() )
+		{
+			rightmostIndex = allPoints.size() - 1;
+		}
+		if ( points.at( i ).getX() < allPoints.at( leftmostIndex ).getX() )
+		{
+			leftmostIndex = allPoints.size() - 1;
+		}
 	}
 	nPoints = allPoints.size();
 }
 
 Polygon::Polygon()
 {
+	rightmostIndex = 0;
+	leftmostIndex = 0;
 	nPoints = 0;
 }
 
@@ -29,6 +43,16 @@ Polygon::~Polygon()
 std::vector<Point> Polygon::getPoints()
 {
 	return allPoints;
+}
+
+int Polygon::getRightmostIndex()
+{
+	return rightmostIndex;
+}
+
+int Polygon::getLeftmostIndex()
+{
+	return leftmostIndex;
 }
 
 void Polygon::drawPolygon( SDL_Renderer * renderer )
@@ -61,6 +85,14 @@ void Polygon::fillPoints()
 	for ( size_t i = 0; i < xPoints.size(); i++ )
 	{
 		allPoints.push_back( Point( xPoints.at( i ), yPoints.at( i ) ) );
+		if ( xPoints.at( i ) > allPoints.at( rightmostIndex ).getX() )
+		{
+			rightmostIndex = allPoints.size() - 1;
+		}
+		if ( xPoints.at( i ) < allPoints.at( leftmostIndex ).getX() )
+		{
+			leftmostIndex = allPoints.size() - 1;
+		}
 	}
 	nPoints = allPoints.size();
 }
@@ -69,6 +101,14 @@ void Polygon::fillPoints()
 void Polygon::addPoint( Point p )
 {
 	allPoints.push_back( p );
+	if ( p.getX() > allPoints.at( rightmostIndex ).getX() )
+	{
+		rightmostIndex = allPoints.size() - 1;
+	}
+	if ( p.getX() < allPoints.at( leftmostIndex ).getX() )
+	{
+		leftmostIndex = allPoints.size() - 1;
+	}
 	nPoints++;
 }
 
