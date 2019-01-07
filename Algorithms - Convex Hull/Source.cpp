@@ -5,9 +5,11 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <ctime>
 
 //#define MERGEDEBUG
 //#define LINEDEBUG
+//#define POINTDEBUG
 
 //Initialise SDL
 bool init();
@@ -155,6 +157,38 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 	std::vector<Point> leftPoints = leftPolygon.getPoints();
 	std::vector<Point> rightPoints = rightPolygon.getPoints();
 
+#ifdef POINTDEBUG
+	for ( int i = 0; i < leftPoints.size() - 1; i++ )
+	{
+		for ( int j = i + 1; j < leftPoints.size(); j++ )
+		{
+			if ( leftPoints.at( i ) == leftPoints.at( j ) )
+			{
+				std::cout << "Left polygon contains overlapping points" << std::endl;
+			}
+		}
+	}
+
+	for ( int i = 0; i < rightPoints.size() - 1; i++ )
+	{
+		for ( int j = i + 1; j < rightPoints.size(); j++ )
+		{
+			if ( rightPoints.at( i ) == rightPoints.at( j ) )
+			{
+				std::cout << "Right polygon contains overlapping points" << std::endl;
+			}
+		}
+	}
+#endif
+
+	if ( leftPolygon.getPoints().at( leftPolygon.getRightmostIndex() ).getX() == rightPolygon.getPoints().at( rightPolygon.getLeftmostIndex() ).getX() )
+	{
+		for ( int i = 0; i < rightPoints.size(); i++ )
+		{
+			rightPoints.at( i ).setX( rightPoints.at( i ).getX() + 1 );
+		}
+	}
+
 	//Rightmost point of left polygon
 	int aHigher = leftPolygon.getRightmostIndex();
 	int aLower = aHigher;
@@ -171,6 +205,19 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 
 	//Intersection with xToCheck;
 	double ix = intersection( xToCheck, leftPoints.at( aHigher ), rightPoints.at( bHigher ) );
+
+#ifdef MERGEDEBUG
+	std::cout << "\nLeft Polygon: " << std::endl;
+	for ( int i = 0; i < leftPoints.size(); i++ )
+	{
+		leftPoints.at( i ).print();
+	}
+	std::cout << "\nRight Polygon: " << std::endl;
+	for ( int i = 0; i < rightPoints.size(); i++ )
+	{
+		rightPoints.at( i ).print();
+	}
+#endif
 
 #ifdef LINEDEBUG
 	SDL_SetRenderDrawColor( gRenderer, 0x66, 0x66, 0x66, 0xFF );
@@ -365,6 +412,14 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 	}
 	while ( aMoved || bMoved );
 
+	if ( leftPolygon.getPoints().at( leftPolygon.getRightmostIndex() ).getX() == rightPolygon.getPoints().at( rightPolygon.getLeftmostIndex() ).getX() )
+	{
+		for ( int i = 0; i < rightPoints.size(); i++ )
+		{
+			rightPoints.at( i ).setX( rightPoints.at( i ).getX() - 1 );
+		}
+	}
+
 	Polygon mergedPolygon;
 
 	mergedPolygon.addPoint( leftPoints.at( aLower ) );
@@ -551,9 +606,22 @@ int main( int argc, char* args[] )
 
 		//Create polygons
 		std::vector<Polygon> polygons;
-		polygons.push_back( Polygon( { {5, 3, 2, 79, 90, 80, 55, 71, 17, 17, 99, 89, 76, 30, 37, 9, 16, 31, 48, 83}, {18, 14, 53, 44, 50, 17, 57, 11, 91, 49, 87, 85, 19, 69, 60, 28, 79, 68, 35, 77} } ) );
+		//polygons.push_back( Polygon( { {5, 3, 2, 79, 90, 80, 55, 71, 17, 17, 99, 89, 76, 30, 37, 9, 16, 31, 48, 83}, {18, 14, 53, 44, 50, 17, 57, 11, 91, 49, 87, 85, 19, 69, 60, 28, 79, 68, 35, 77} } ) );
+		//polygons.push_back( Polygon( { 243, 247, 254, 268, 280, 283, 284, 291, 298, 300, 302, 302, 302, 302, 309, 309, 312, 323, 328, 330 }, { 174,172,164,173,252,235,224,230,191,194,184,228,250,217,181,227,218,169,232,175 } ) ); //307, 308
+		polygons.push_back( Polygon() );
 		polygons.push_back( Polygon( { {12, 45, 5, 74, 8, 85, 7, 78, 17, 21, 70, 64, 50, 79, 91, 10, 87, 11, 2, 66}, {82, 89, 65, 97, 52, 69, 16, 56, 74, 85, 35, 51, 46, 99, 31, 83, 12, 6, 8, 84} } ) );
 		polygons.push_back( Polygon( { {55, 12, 42, 6, 81, 36, 10, 76, 41, 73, 59, 60, 3, 16, 65, 47, 9, 40, 24, 21}, {87, 61, 100, 31, 63, 75, 21, 89, 8, 35, 96, 49, 74, 93, 64, 56, 22, 11, 66, 98} } ) );
+
+		srand( time( NULL ) );
+		for ( int x = 0; x < 200; x++ )
+		{
+			polygons.at( 0 ).addPoint( Point( { rand() % 101, rand() % 101 } ) );
+		}
+
+		//SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+		//polygons.at( 0 ).drawPolygon(gRenderer);
+		//SDL_RenderPresent( gRenderer );
+		//std::system( "pause" );
 
 		//Translate polygons to desired location
 		polygons.at( 0 ).translate( 230, 160 );

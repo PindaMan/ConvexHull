@@ -1,6 +1,13 @@
 ﻿  Source.cpp
-d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(232): warning C4018: '<': signed/unsigned mismatch
-d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(280): warning C4018: '<': signed/unsigned mismatch
-d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(377): warning C4018: '<': signed/unsigned mismatch
-d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(397): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(161): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(163): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(172): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(174): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(186): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(279): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(327): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(417): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(432): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(452): warning C4018: '<': signed/unsigned mismatch
+d:\_programming\visual studio\c++\university\algorithms - convex hull\algorithms - convex hull\source.cpp(615): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Algorithms - Convex Hull.vcxproj -> D:\_Programming\Visual Studio\C++\University\Algorithms - Convex Hull\Debug\Algorithms - Convex Hull.exe
