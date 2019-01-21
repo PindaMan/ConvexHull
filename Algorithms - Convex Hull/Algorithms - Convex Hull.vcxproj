@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\SDL2\SDL2-2.0.8\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\SDL2\SDL2-2.0.8\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\SDL2\SDL2-devel-2.0.9-VC\SDL2-2.0.9\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\SDL2\SDL2-devel-2.0.9-VC\SDL2-2.0.9\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

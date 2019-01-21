@@ -17,6 +17,7 @@ Polygon::Polygon( std::vector<Point> points )
 	for ( size_t i = 0; i < points.size(); i++ )
 	{
 		allPoints.push_back( points.at( i ) );
+		//Update leftmost and rightmost point if necessary
 		if ( points.at( i ).getX() > allPoints.at( rightmostIndex ).getX() )
 		{
 			rightmostIndex = allPoints.size() - 1;
@@ -85,6 +86,7 @@ void Polygon::fillPoints()
 	for ( size_t i = 0; i < xPoints.size(); i++ )
 	{
 		allPoints.push_back( Point( xPoints.at( i ), yPoints.at( i ) ) );
+		//Update leftmost and rightmost point if necessary
 		if ( xPoints.at( i ) > allPoints.at( rightmostIndex ).getX() )
 		{
 			rightmostIndex = allPoints.size() - 1;
@@ -101,6 +103,7 @@ void Polygon::fillPoints()
 void Polygon::addPoint( Point p )
 {
 	allPoints.push_back( p );
+	//Update leftmost and rightmost point if necessary
 	if ( p.getX() > allPoints.at( rightmostIndex ).getX() )
 	{
 		rightmostIndex = allPoints.size() - 1;

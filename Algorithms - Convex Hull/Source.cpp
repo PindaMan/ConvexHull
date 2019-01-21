@@ -5,48 +5,65 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <ctime>
 
-//#define MERGEDEBUG
-//#define LINEDEBUG
-//#define POINTDEBUG
 
-//Initialise SDL
-bool init();
-
-//Quit SDL
-void exit();
-
-void pause();
-
+//===========================================//
+//================CONVEX HULL================//
+//sort by x coordinate then y coordinate
 bool wayToSort( Point &a, Point &b );
 
+//calculate the gradient of the line between 2 points
 double gradient( Point p1, Point p2 );
-
-Polygon merge( Polygon leftPolygon, Polygon rightPolygon );
-
-//Convex hull of polygon
-Polygon convexHull( Polygon input );
-
-//Upper hull of polygon
-std::vector<Point>upperHull( std::vector<Point> points );
-
-//Lower hull of polygon
-std::vector<Point>lowerHull( std::vector<Point> points );
-
+//claculate y intercept of line equation
+double yIntercept( double m, Point p );
+//calculate intersection of a line at a given x
+double intersection( double x, Point p1, Point p2 );
 //Check if 3 points make a right turn
 bool rightTurn( Point p1, Point p2, Point p3 );
 
+//Divide and conquer convex hull
+Polygon dcHull( std::vector<Point> sortedPoints );
+//Merge two polygons to create convex hull
+Polygon merge( Polygon leftPolygon, Polygon rightPolygon );
 
+//Convex hull of polygon
+Polygon convexHull( std::vector<Point> sortedPoints );
+//Upper hull of polygon
+std::vector<Point>upperHull( std::vector<Point> points );
+//Lower hull of polygon
+std::vector<Point>lowerHull( std::vector<Point> points );
+//================CONVEX HULL================//
+//===========================================//
+
+
+//===========================================//
+//===============SDL FUNCTIONS===============//
 //Screen dimensions
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 450;
-
 //Window
 SDL_Window* gWindow = NULL;
-
 //Renderer
 SDL_Renderer* gRenderer = NULL;
+
+//Initialise SDL
+bool init();
+//Quit SDL
+void close();
+//===============SDL FUNCTIONS===============//
+//===========================================//
+
+
+//===========================================//
+//=================DEBUGGING=================//
+//#define MERGEDEBUG
+//#define LINEDEBUG
+//#define POINTDEBUG
+#if defined MERGEDEBUG || defined LINEDEBUG
+void pause();
+#endif
+//=================DEBUGGING=================//
+//===========================================//
 
 bool init()
 {
@@ -80,6 +97,7 @@ bool init()
 			{
 				SDL_SetRenderDrawColor( gRenderer, 0x66, 0x66, 0x66, SDL_ALPHA_OPAQUE );
 				SDL_RenderClear( gRenderer );
+				SDL_RenderPresent( gRenderer );
 			}
 		}
 	}
@@ -87,7 +105,7 @@ bool init()
 	return success;
 }
 
-void exit()
+void close()
 {
 	//Destroy and deallocate renderer
 	SDL_DestroyRenderer( gRenderer );
@@ -101,6 +119,7 @@ void exit()
 	SDL_Quit();
 }
 
+#if defined MERGEDEBUG || defined LINEDEBUG
 void pause()
 {
 	std::cout << "Press any key to continue . . ." << std::endl;
@@ -122,7 +141,9 @@ void pause()
 		}
 	}
 }
+#endif
 
+/*
 bool wayToSort( Point& a, Point& b )
 {
 	if ( a.getX() != b.getX() )
@@ -133,6 +154,11 @@ bool wayToSort( Point& a, Point& b )
 	{
 		return a.getY() < b.getY();
 	}
+}
+*/
+bool wayToSort( Point& a, Point& b )
+{
+	return a.getX() < b.getX();
 }
 
 double gradient( Point p1, Point p2 )
@@ -181,14 +207,6 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 	}
 #endif
 
-	if ( leftPolygon.getPoints().at( leftPolygon.getRightmostIndex() ).getX() == rightPolygon.getPoints().at( rightPolygon.getLeftmostIndex() ).getX() )
-	{
-		for ( int i = 0; i < rightPoints.size(); i++ )
-		{
-			rightPoints.at( i ).setX( rightPoints.at( i ).getX() + 1 );
-		}
-	}
-
 	//Rightmost point of left polygon
 	int aHigher = leftPolygon.getRightmostIndex();
 	int aLower = aHigher;
@@ -234,7 +252,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 	//Higher tangent
 	do
 	{
-		//If intersection increases at next b (clockwise(++)), move
+		//If intersection increases at next b (clockwise(--)), move to next b
 		if ( bHigher > 0 )
 		{
 			if ( ix < intersection( xToCheck, leftPoints.at( aHigher ), rightPoints.at( bHigher - 1 ) ) )
@@ -250,6 +268,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 		}
 		else
 		{
+			//loop back to end
 			if ( ix < intersection( xToCheck, leftPoints.at( aHigher ), rightPoints.at( rightPoints.size() - 1 ) ) )
 			{
 				bHigher = rightPoints.size() - 1;
@@ -275,7 +294,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 		pause();
 #endif
 
-		//If intersection increases at next a (anti-clockwise(--)), move
+		//If intersection increases at next a (anti-clockwise(++)), move to next a
 		if ( aHigher < leftPoints.size() - 1 )
 		{
 			if ( ix < intersection( xToCheck, leftPoints.at( aHigher + 1 ), rightPoints.at( bHigher ) ) )
@@ -291,6 +310,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 		}
 		else
 		{
+			//loop back to start
 			if ( ix < intersection( xToCheck, leftPoints.at( 0 ), rightPoints.at( bHigher ) ) )
 			{
 				aHigher = 0;
@@ -323,7 +343,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 	//Lower tangent
 	do
 	{
-		//If intersection decreases at next b (anti-clockwise(--)), move
+		//If intersection decreases at next b (anti-clockwise(++)), move to next b
 		if ( bLower < rightPoints.size() - 1 )
 		{
 			if ( ix > intersection( xToCheck, leftPoints.at( aLower ), rightPoints.at( bLower + 1 ) ) )
@@ -339,6 +359,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 		}
 		else
 		{
+			//loop back to start
 			if ( ix > intersection( xToCheck, leftPoints.at( aLower ), rightPoints.at( 0 ) ) )
 			{
 				bLower = 0;
@@ -366,7 +387,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 		pause();
 #endif
 
-		//If intersection decreases at next a (clockwise(++)), move
+		//If intersection decreases at next a (clockwise(--)), move to next a
 		if ( aLower > 0 )
 		{
 			if ( ix > intersection( xToCheck, leftPoints.at( aLower - 1 ), rightPoints.at( bLower ) ) )
@@ -382,6 +403,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 		}
 		else
 		{
+			//loop back to end
 			if ( ix > intersection( xToCheck, leftPoints.at( leftPoints.size() - 1 ), rightPoints.at( bLower ) ) )
 			{
 				aLower = leftPoints.size() - 1;
@@ -412,17 +434,13 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 	}
 	while ( aMoved || bMoved );
 
-	if ( leftPolygon.getPoints().at( leftPolygon.getRightmostIndex() ).getX() == rightPolygon.getPoints().at( rightPolygon.getLeftmostIndex() ).getX() )
-	{
-		for ( int i = 0; i < rightPoints.size(); i++ )
-		{
-			rightPoints.at( i ).setX( rightPoints.at( i ).getX() - 1 );
-		}
-	}
-
+	//output
 	Polygon mergedPolygon;
 
+	//add lower tangent of left polygon
 	mergedPolygon.addPoint( leftPoints.at( aLower ) );
+
+	//add points of right polygon (start at lower tangent, working outside to higher tangent)
 	int rightCount = bLower;
 	if ( bLower != bHigher )
 	{
@@ -443,6 +461,7 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 
 	mergedPolygon.addPoint( rightPoints.at( rightCount ) );
 
+	//add points of left polygon (start at higher tangent, working outside to lower tangent)
 	int leftCount = aHigher;
 	if ( aHigher != aLower )
 	{
@@ -478,57 +497,45 @@ Polygon merge( Polygon leftPolygon, Polygon rightPolygon )
 	return mergedPolygon;
 }
 
-Polygon dcHull( Polygon input )
+Polygon dcHull( std::vector<Point> sortedPoints )
 {
 	size_t minSize = 4;
-	std::vector<Point> sortedPoints = input.getPoints();
-	std::sort( sortedPoints.begin(), sortedPoints.end(), wayToSort );
 
 	if ( sortedPoints.size() <= minSize )
 	{
-		return convexHull( Polygon( sortedPoints ) );
+		//no further iteration required
+		return convexHull( sortedPoints );
 	}
 	else
 	{
-		//split
+		//split sortedPoints into 2 vectors
 		size_t const nHalf = sortedPoints.size() / 2;
 		std::vector<Point> l1( sortedPoints.begin(), sortedPoints.begin() + nHalf );
 		std::vector<Point> l2( sortedPoints.begin() + nHalf, sortedPoints.end() );
 
-		return merge( dcHull( Polygon( l1 ) ), dcHull( Polygon( l2 ) ) );
+		//next iteration
+		return merge( dcHull( l1 ), dcHull( l2 ) );
 	}
-	//return input;
 }
 
-Polygon convexHull( Polygon input )
+Polygon convexHull( std::vector<Point> sortedPoints )
 {
-	std::vector<Point> sortedPoints = input.getPoints();
 	std::vector<Point> lUpper;
 	std::vector<Point> lLower;
 
-	//Sort all points on x value
-	std::sort( sortedPoints.begin(), sortedPoints.end(), wayToSort );
-
+	//generate upper and lower hulls
 	lUpper = upperHull( sortedPoints );
 	lLower = lowerHull( sortedPoints );
 
+	//remove first point of lower hull (shared with upper hull)
 	lLower.erase( lLower.begin() );
 	lLower.pop_back();
 
-	lUpper.insert( lUpper.end(), lLower.begin(), lLower.end() );
+	//add all points from lower hull to upper hull to create final output polygon
+	std::vector<Point> outPolyPoints = lUpper;
+	outPolyPoints.insert( outPolyPoints.end(), lLower.begin(), lLower.end() );
 
-	std::vector<int> outX;
-	std::vector<int> outY;
-
-	for ( size_t i = 0; i < lUpper.size(); i++ )
-	{
-		outX.push_back( lUpper.at( i ).getX() );
-		outY.push_back( lUpper.at( i ).getY() );
-	}
-
-	Polygon outPoly = Polygon( outX, outY );
-
-	return outPoly;
+	return Polygon(outPolyPoints);
 }
 
 std::vector<Point> upperHull( std::vector<Point> points )
@@ -581,9 +588,7 @@ std::vector<Point> lowerHull( std::vector<Point> points )
 
 bool rightTurn( Point p1, Point p2, Point p3 )
 {
-	//double g1 = (double) ( p2.getY() - p1.getY() ) / ( p2.getX() - p1.getX() );
-	//double g2 = (double) ( p3.getY() - p2.getY() ) / ( p3.getX() - p2.getX() );
-
+	//Rearranged gradient equation to avoid division by zero
 	int g1 = ( p2.getY() - p1.getY() ) * ( p3.getX() - p2.getX() );
 	int g2 = ( p3.getY() - p2.getY() ) * ( p2.getX() - p1.getX() );
 
@@ -592,7 +597,7 @@ bool rightTurn( Point p1, Point p2, Point p3 )
 
 int main( int argc, char* args[] )
 {
-	if ( !init() )
+	if( !init() )
 	{
 		std::cout << "Failed to initialise." << std::endl;
 	}
@@ -606,42 +611,27 @@ int main( int argc, char* args[] )
 
 		//Create polygons
 		std::vector<Polygon> polygons;
-		//polygons.push_back( Polygon( { {5, 3, 2, 79, 90, 80, 55, 71, 17, 17, 99, 89, 76, 30, 37, 9, 16, 31, 48, 83}, {18, 14, 53, 44, 50, 17, 57, 11, 91, 49, 87, 85, 19, 69, 60, 28, 79, 68, 35, 77} } ) );
-		//polygons.push_back( Polygon( { 243, 247, 254, 268, 280, 283, 284, 291, 298, 300, 302, 302, 302, 302, 309, 309, 312, 323, 328, 330 }, { 174,172,164,173,252,235,224,230,191,194,184,228,250,217,181,227,218,169,232,175 } ) ); //307, 308
-		polygons.push_back( Polygon() );
-		polygons.push_back( Polygon( { {12, 45, 5, 74, 8, 85, 7, 78, 17, 21, 70, 64, 50, 79, 91, 10, 87, 11, 2, 66}, {82, 89, 65, 97, 52, 69, 16, 56, 74, 85, 35, 51, 46, 99, 31, 83, 12, 6, 8, 84} } ) );
-		polygons.push_back( Polygon( { {55, 12, 42, 6, 81, 36, 10, 76, 41, 73, 59, 60, 3, 16, 65, 47, 9, 40, 24, 21}, {87, 61, 100, 31, 63, 75, 21, 89, 8, 35, 96, 49, 74, 93, 64, 56, 22, 11, 66, 98} } ) );
-
-		srand( time( NULL ) );
-		for ( int x = 0; x < 200; x++ )
-		{
-			polygons.at( 0 ).addPoint( Point( { rand() % 101, rand() % 101 } ) );
-		}
-
-		//SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
-		//polygons.at( 0 ).drawPolygon(gRenderer);
-		//SDL_RenderPresent( gRenderer );
-		//std::system( "pause" );
-
-		//Translate polygons to desired location
+		polygons.push_back( Polygon( { {2, 3, 5, 9, 18, 48, 71, 76, 80, 79, 90, 99, 89, 83, 55, 37, 31, 30, 17, 16}, {53, 14, 18, 28, 49, 35, 11, 19, 17, 44, 50, 87, 85, 77, 57, 60, 68, 69, 91, 79} } ) );
+		polygons.push_back( Polygon( { {2, 3, 5, 9, 18, 48, 71, 76, 80, 79, 90, 99, 89, 83, 55, 37, 31, 30, 17, 16}, {53, 14, 18, 28, 49, 35, 11, 19, 17, 44, 50, 87, 85, 77, 57, 60, 68, 69, 91, 79} } ) );
+		polygons.push_back( Polygon( { {2, 3, 5, 9, 18, 48, 71, 76, 80, 79, 90, 99, 89, 83, 55, 37, 31, 30, 17, 16}, {53, 14, 18, 28, 49, 35, 11, 19, 17, 44, 50, 87, 85, 77, 57, 60, 68, 69, 91, 79} } ) );
+		
 		polygons.at( 0 ).translate( 230, 160 );
 		polygons.at( 1 ).translate( 400, 50 );
 		polygons.at( 2 ).translate( 400, 160 );
 
-		//Create points a, b, and c
+		SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE );
+		
+		for( int i = 0; i < polygons.size(); i++ )
+		{
+			polygons.at(i).drawPolygon( gRenderer );
+		}
+
+		//Create points a, b and c
 		Point a = { 200, 200 };
 		Point b = { 380, 190 };
 		Point c = { 540, 170 };
 
-		//Draw each polygon as its convex hull filled with inner points (Green lines, red points)
-		for ( size_t i = 0; i < polygons.size(); i++ )
-		{
-			SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
-			//convexHull( polygons.at( i ) ).drawPolygon( gRenderer );
-			dcHull( polygons.at( i ) ).drawPolygon( gRenderer );
-		}
-
-		//Add start and end points to the polygons
+		//add points to respective polygons
 		polygons.at( 0 ).addPoint( a );
 		polygons.at( 0 ).addPoint( b );
 
@@ -651,21 +641,26 @@ int main( int argc, char* args[] )
 		polygons.at( 2 ).addPoint( b );
 		polygons.at( 2 ).addPoint( c );
 
-		//Draw each path as the convex hull of its polygon (Cyan)
-		for ( size_t i = 0; i < polygons.size(); i++ )
+		//Calculate convex hull for each polygon
+		for( int i = 0; i < polygons.size(); i++ )
 		{
-			SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0xFF, SDL_ALPHA_OPAQUE );
-			//convexHull( polygons.at( i ) ).drawPolygon( gRenderer );
-			dcHull( polygons.at( i ) ).drawPolygon( gRenderer );
+			std::vector<Point> sortedPoints = polygons.at(i).getPoints();
+			std::sort( sortedPoints.begin(), sortedPoints.end(), wayToSort );
 
-			//Draw each point in the polygon
-			for ( size_t j = 0; j < polygons.at( i ).getPoints().size(); j++ )
+			//set draw colour to make different paths clear
+			if( i == 0 ) SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0xFF, SDL_ALPHA_OPAQUE );
+			if( i == 1 ) SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0x00, SDL_ALPHA_OPAQUE );
+			if( i == 2 ) SDL_SetRenderDrawColor( gRenderer, 0xFF, 0x00, 0xFF, SDL_ALPHA_OPAQUE );
+			dcHull( sortedPoints ).drawPolygon( gRenderer );
+
+			for( size_t j = 0; j < polygons.at(i).getPoints().size(); j++ )
 			{
-				polygons.at( i ).getPoints().at( j ).drawPoint( gRenderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE );
+				polygons.at(i).getPoints().at( j ).drawPoint( gRenderer, 0xFF, 0x00, 0x00, SDL_ALPHA_OPAQUE );
 			}
+
 		}
 
-		//Draw start and end points (Blue)
+		//Draw points
 		a.drawPoint( gRenderer, 0x00, 0x00, 0xFF, SDL_ALPHA_OPAQUE );
 		b.drawPoint( gRenderer, 0x00, 0x00, 0xFF, SDL_ALPHA_OPAQUE );
 		c.drawPoint( gRenderer, 0x00, 0x00, 0xFF, SDL_ALPHA_OPAQUE );
@@ -673,22 +668,21 @@ int main( int argc, char* args[] )
 		//Update screen
 		SDL_RenderPresent( gRenderer );
 
-
-		while ( isRunning )
+		while( isRunning )
 		{
-			while ( SDL_PollEvent( &e ) )
+			//Handle events
+			while( SDL_PollEvent( &e ) != 0 )
 			{
-				//X button
-				if ( e.type == SDL_QUIT )
+				//Close window button pressed
+				if( e.type == SDL_QUIT )
 				{
 					isRunning = false;
 				}
 			}
-
 		}
+
+		//Quit SDL
+		close();
 	}
-
-	exit();
-
 	return 0;
 }

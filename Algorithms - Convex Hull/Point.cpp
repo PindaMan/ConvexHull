@@ -37,6 +37,7 @@ void Point::setY( int y )
 	yPos = y;
 }
 
+//Point comparison
 bool Point::operator == ( Point& toCompare )
 {
 	if ( getX() == toCompare.getX() )
